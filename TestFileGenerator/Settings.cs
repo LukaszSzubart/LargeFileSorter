@@ -1,32 +1,31 @@
-﻿using Common;
+﻿using Tools;
 
-namespace TestFileGenerator
+namespace TestFileGenerator;
+
+internal class Settings
 {
-    internal class Settings
+    const long defaultSizeInBytes = 1024 * (long)BinarySize.InBytes.MB;
+    //const long defaultSizeInBytes = 1 * BinarySize.InBytes.GB;
+
+    private Settings() { }
+
+    public required long ExpectedOutFileSizeInBytes { get; init; }
+
+    public required string OutFilePath { get; init; }
+
+    public static Settings CreateFrom(string[] args)
     {
-        const long defaultSizeInBytes = 100 * BinarySize.InBytes.MB;
-        //const long defaultSizeInBytes = 1 * BinarySize.InBytes.GB;
+        var expectedOutFileSizeInBytes = args.Length > 0 && int.TryParse(args[0], out var sizeFromArgs)
+        ? sizeFromArgs * BinarySize.InBytes.MB
+        : defaultSizeInBytes;
+        var expectedOutFileSizeInMB = expectedOutFileSizeInBytes / BinarySize.InBytes.MB;
 
-        private Settings() { }
+        string OutFilePath = $".\\{expectedOutFileSizeInMB}mb.txt";
 
-        public required long ExpectedOutFileSizeInBytes { get; init; }
-
-        public required string OutFilePath { get; init; }
-
-        public static Settings CreateFrom(string[] args)
+        return new Settings
         {
-            var expectedOutFileSizeInBytes = args.Length > 0 && int.TryParse(args[0], out var sizeFromArgs)
-            ? sizeFromArgs * BinarySize.InBytes.MB
-            : defaultSizeInBytes;
-            var expectedOutFileSizeInMB = expectedOutFileSizeInBytes / BinarySize.InBytes.MB;
-
-            string OutFilePath = $".\\{expectedOutFileSizeInMB}mb.txt";
-
-            return new Settings
-            {
-                OutFilePath = OutFilePath,
-                ExpectedOutFileSizeInBytes = expectedOutFileSizeInBytes
-            };
-        }
+            OutFilePath = OutFilePath,
+            ExpectedOutFileSizeInBytes = expectedOutFileSizeInBytes
+        };
     }
 }

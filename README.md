@@ -25,3 +25,9 @@ Based on [External merge sort](https://en.wikipedia.org/wiki/External_sorting#Ex
 ### Phase 0 - Initialization
 Split file into chunks which can be processed parallely in Phase 1
 - Calculate lines count using [algorithm](https://nimaara.com/2018/03/20/counting-lines-of-a-text-file-in-csharp.html) 
+
+46
+
+80
+
+FF
