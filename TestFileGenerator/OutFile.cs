@@ -17,6 +17,7 @@ internal sealed class OutFile : IDisposable
             Share = FileShare.None
         };
         Writer = new StreamWriter(path, Encoding.ASCII, outFileOptions);
+        Writer.NewLine = "\n";
     }
 
     public StreamWriter Writer { get; }

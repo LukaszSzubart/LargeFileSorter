@@ -1,4 +1,4 @@
-﻿using Sorter.Phase0;
+﻿using Sorter.Phase1;
 
 const string dir = "C:\\code\\LargeFileSorter\\TestFileGenerator\\bin\\Release\\net9.0\\";
 
@@ -6,10 +6,11 @@ const string path = dir + "1024mb.txt";
 //const string path = dir + "100mb.txt";
 
 
+var runInfo = new Sorter.RunInfo(path);
+
+await Phase1Orchestrator.ExecutePhase1(runInfo);
 
 
-
-var chunks = await ChunkFactory.Create(new Sorter.RunInfo(path));
 
 Console.WriteLine("end");
 

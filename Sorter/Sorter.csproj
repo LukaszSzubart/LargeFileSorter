@@ -11,4 +11,8 @@
     <ProjectReference Include="..\Tools\Tools.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Benchmarks" />
+  </ItemGroup>
+
 </Project>

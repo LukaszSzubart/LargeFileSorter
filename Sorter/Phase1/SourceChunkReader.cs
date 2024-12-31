@@ -1,22 +1,20 @@
-﻿using Sorter.Phase0;
+﻿using Sorter.Common;
 using System.Buffers;
 using System.IO.Pipelines;
 using Tools;
 
 namespace Sorter.Phase1;
 
-internal static class ChunkReader
+internal static class SourceChunkReader
 {
-    public async static Task<Chunk> Read(ChunkInfo chunkInfo)
+    public async static Task<SourceChunk> Read(SourceChunkInfo chunkInfo)
     {
-        var chunk = new Chunk(chunkInfo);
-
         await using var stream = OpenFile(chunkInfo);
-
         var reader = PipeReader.Create(stream);
+        var arrayPool = ArrayPool<Row>.Shared;
+        var lineBuffer = arrayPool.Rent(GlobalSettings.ArrayPoolLengthLimit);
 
-        long lineCount = 0L;
-
+        long index = 0L;
         ReadResult result;
         do
         {
@@ -26,22 +24,20 @@ internal static class ChunkReader
 
             while (sequenceReader.TryReadTo(out ReadOnlySpan<byte> bytes, (byte)ConstChars.LF, true))
             {
-                var byteArray = new byte[bytes.Length];
-                bytes.CopyTo(byteArray);
-                //chunk.Lines[lineCount] = new Line(byteArray);
-                lineCount++;
-
+                var line = RowDeserializer.Deserialize(bytes);
+                lineBuffer[index] = line;
+                index++;
             }
 
             reader.AdvanceTo(sequenceReader.Position, result.Buffer.End);
 
-        } while (lineCount < chunkInfo.LineCount);
+        } while (index < chunkInfo.LineCount);
 
-        return chunk;
+        return new SourceChunk(chunkInfo, lineBuffer, arrayPool);
     }
 
 
-    private static FileStream OpenFile(ChunkInfo chunkInfo)
+    private static FileStream OpenFile(SourceChunkInfo chunkInfo)
     {
         var fsOptions = new FileStreamOptions
         {
@@ -50,6 +46,6 @@ internal static class ChunkReader
             Share = FileShare.Read
         };
 
-        return new FileStream(chunkInfo.RunInfo.InputFilePath, fsOptions);
+        return new FileStream(chunkInfo.FilePath, fsOptions);
     }
 }
