@@ -1,11 +1,7 @@
-﻿using AutoFixture;
-using BenchmarkDotNet.Running;
+﻿using BenchmarkDotNet.Running;
 using Benchmarks;
-using Sorter.Common;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 
-var summary = BenchmarkRunner.Run<IntermediateChunkWriterBenchmark>();
+var summary = BenchmarkRunner.Run<LineCounterBenchmark>();
 
 //var rootDir = "C:\\data\\tmp\\benchmark\\source.txt";
 //var f = new Fixture();

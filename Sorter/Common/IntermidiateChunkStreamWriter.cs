@@ -1,11 +1,4 @@
-﻿using System;
-using System.Buffers;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿using System.Buffers;
 
 namespace Sorter.Common;
 internal class IntermidiateChunkStreamWriter
@@ -13,7 +6,7 @@ internal class IntermidiateChunkStreamWriter
     private static ReadOnlyMemory<byte> NumberStringSeparatorBytes { get; } = GlobalSettings.Encoding.GetBytes(". ").AsMemory();
     private static ReadOnlyMemory<byte> NewLineBytes { get; } = GlobalSettings.Encoding.GetBytes(GlobalSettings.NewLine).AsMemory();
 
-    public static Task Write(IntermediateChunkInfo chunkInfo, Row[] rows)
+    public static Task Write(IntermediateChunkInfo chunkInfo, IReadOnlyList<Row> rows)
     {
         using var stream = OpenWriteStream(chunkInfo);
 

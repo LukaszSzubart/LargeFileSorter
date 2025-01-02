@@ -14,6 +14,8 @@ internal sealed record Row
     public ulong Number { get; }
 
     public static IComparer<Row> Comparer { get; } = new RowComparer();
+    public bool IsEmpty => ReferenceEquals(this, Empty);
+    public static Row Empty { get; } = new Row(0, string.Empty);
 
     private class RowComparer : IComparer<Row>
     {
@@ -24,8 +26,8 @@ internal sealed record Row
             const int XIsGreater = 1;
             const int AreEqual = 0;
 
-            var xIsNull = x is null;
-            var yIsNull = y is null;
+            var xIsNull = x is null || x.IsEmpty;
+            var yIsNull = y is null || y.IsEmpty;
 
             if (!xIsNull && yIsNull)
                 return XIsLess;

@@ -1,7 +1,6 @@
 ﻿using Sorter.Common;
 using System.Buffers;
 using System.IO.Pipelines;
-using Tools;
 
 namespace Sorter.Phase1;
 
@@ -45,7 +44,8 @@ internal static class SourceChunkReader
         {
             Access = FileAccess.Read,
             Mode = FileMode.Open,
-            Share = FileShare.Read
+            Share = FileShare.Read,
+            Options = FileOptions.Asynchronous
         };
 
         return new FileStream(chunkInfo.FilePath, fsOptions);

@@ -4,7 +4,7 @@ internal static class TempFilePathFactory
 {
     private const string ChunkFileExt = ".txt";
     private const string ChunkInfoFileExt = ".info.json";
-    private static readonly string _workingDirPath = Path.Combine(Directory.GetCurrentDirectory(), "workingDir");
+    private static readonly string _workingDirPath = @"C:\code\LargeFileSorter\Sorter\bin\Debug\net9.0\workingDir";// Path.Combine(Directory.GetCurrentDirectory(), "workingDir");
 
     static TempFilePathFactory()
     {

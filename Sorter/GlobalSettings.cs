@@ -25,4 +25,6 @@ public static class GlobalSettings
     public static bool DumpIntermidieteChunkDefinition => true;
 
     public static bool CleanWorkingDirBefore => false;
+
+    public static int IntermediateChunkReadChannelCapacity => ArrayPoolLengthLimit;
 }

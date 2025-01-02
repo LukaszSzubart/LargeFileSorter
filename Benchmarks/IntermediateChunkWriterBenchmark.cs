@@ -1,6 +1,6 @@
-﻿using AutoFixture;
-using BenchmarkDotNet.Attributes;
+﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
+using Benchmarks.TestData;
 using Sorter.Common;
 using System.Text.Json;
 
@@ -21,17 +21,12 @@ public class IntermediateChunkWriterBenchmark
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     private Row[] _rows;
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
-
-    private readonly string _rootPath = "C:\\data\\tmp\\benchmark";
         
     [GlobalSetup]
     public void Setup()
     {
-        var sourceDir = "C:\\data\\tmp\\benchmark\\source.txt";
-        using var sourceStream = File.OpenRead(sourceDir);
+        using var sourceStream = File.OpenRead(TestDataPaths.RowsSmallJson);
         _rows = JsonSerializer.Deserialize<Row[]>(sourceStream);
-
-        Console.WriteLine(_rootPath);
     }
 
     [Benchmark]
@@ -54,7 +49,7 @@ public class IntermediateChunkWriterBenchmark
 
     private IntermediateChunkInfo GetInfo(string name)
     {
-        var path = Path.Combine(_rootPath, '_' + name + ".txt");
+        var path = Path.Combine(TestDataPaths.OutDir, '_' + name + ".txt");
         return new IntermediateChunkInfo(1, path, _rows.Length, 1);
     }
 }

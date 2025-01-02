@@ -5,23 +5,16 @@ namespace Tools;
 
 public static class PipeLineCounter
 {
-    private const char CR = '\r';
     private const char LF = '\n';
-    private const char NULL = (char)0;
 
-    public static async Task<long> Count(Stream stream)
+    public static async Task<long> CountWithTryAdvanceTo(Stream stream)
     {
         ArgumentNullException.ThrowIfNull(stream);
-
 
         var options = new StreamPipeReaderOptions(bufferSize: BinarySize.InBytes.MB, minimumReadSize: BinarySize.InBytes.MB);
         var reader = PipeReader.Create(stream, options);
 
-       
         long lineCount = 0L;
-
-        char detectedEOL = NULL;
-        char currentChar = NULL;
 
         ReadResult result;
         var position = 0L;
@@ -41,11 +34,6 @@ public static class PipeLineCounter
 
         } while (!result.IsCompleted);
 
-        // We had a NON-EOL character at the end without a new line
-        if (currentChar != LF && currentChar != CR && currentChar != NULL)
-        {
-            lineCount++;
-        }
         return lineCount;
     }
 
