@@ -6,11 +6,10 @@ namespace Sorter.Phase1;
 
 internal static class Phase1ChunkInfoFactory
 {
-    private const char LF = '\n';
-
     public static async Task<IReadOnlyList<Phase1ChunkInfo>> Create(RunInfo runInfo)
     {
         ArgumentNullException.ThrowIfNull(runInfo);
+
         await using var inputFileStream = File.OpenRead(runInfo.InputFilePath);
         var pipeReader = PipeReader.Create(inputFileStream);
 
@@ -22,11 +21,12 @@ internal static class Phase1ChunkInfoFactory
         {
             readResult = await pipeReader.ReadAsync();
 
+            var delimiterBytes = GlobalSettings.NewLineBytes.Span;
             var sequenceReader = new SequenceReader<byte>(readResult.Buffer);
 
-            while (sequenceReader.TryReadTo(out ReadOnlySpan<byte> consumed, (byte)LF, true))
+            while (sequenceReader.TryReadTo(out ReadOnlySpan<byte> consumed, delimiterBytes, true))
             {
-                chunktContext.Update(consumed.Length);
+                chunktContext.Update(consumed.Length + delimiterBytes.Length);
                 if (chunktContext.LimitAchived)
                 {
                     var chunkInfo = CreateInfo(runInfo, chunktContext);
@@ -40,17 +40,22 @@ internal static class Phase1ChunkInfoFactory
 
         } while (!readResult.IsCompleted);
 
+        if(chunktContext.ConsumedBytes > 0)
+        {
+            var chunkInfo = CreateInfo(runInfo, chunktContext);
+            chunks.Add(chunkInfo);
+        }
+
         return chunks;
     }
 
     private static Phase1ChunkInfo CreateInfo(RunInfo runInfo, ChunkContext ctx)
     {
-        var sourceInfo = new SourceChunkInfo(runInfo.InputFilePath, ctx.StartPos, ctx.RowCount, ctx.SizeInBytes);
-        var destPath = TempFilePathFactory.Create(ctx.Id);
-        var destInfo = new IntermediateChunkInfo(destPath, ctx.RowCount, ctx.SizeInBytes);
+        var sourceInfo = new SourceChunkInfo(ctx.Id, runInfo.InputFilePath, ctx.StartPos, ctx.RowCount, ctx.ConsumedBytes);
+        var destPath = TempFilePathFactory.CreateChunkFilePath("1", ctx.Id);
+        var destInfo = new IntermediateChunkInfo(ctx.Id, destPath, ctx.RowCount, ctx.ConsumedBytes);
         return new(sourceInfo, destInfo);
     }
-
 
     private struct ChunkContext
     {
@@ -60,30 +65,30 @@ internal static class Phase1ChunkInfoFactory
             Id = 0;
             StartPos = 0;
             RowCount = 0;
-            SizeInBytes = 0;
+            ConsumedBytes = 0;
         }
 
         private long _totalConsumedBytes;
         public int Id { get; private set; }
         public long StartPos { get; private set; }
         public int RowCount { get; private set; }
-        public long SizeInBytes { get; private set; }
+        public long ConsumedBytes { get; private set; }
 
         public readonly bool LimitAchived
-            => SizeInBytes >= GlobalSettings.ChunkMaxSizeInBytes || RowCount == GlobalSettings.ArrayPoolLengthLimit;
+            => ConsumedBytes >= GlobalSettings.ChunkMaxSizeInBytes || RowCount == GlobalSettings.ArrayPoolLengthLimit;
 
         public void Update(long consumedBytes)
         {
             _totalConsumedBytes += consumedBytes;
             RowCount++;
-            SizeInBytes = _totalConsumedBytes - StartPos;
+            ConsumedBytes = _totalConsumedBytes - StartPos;
         }
 
         public void NextChunk()
         {
             StartPos = _totalConsumedBytes;
             RowCount = 0;
-            SizeInBytes = 0;
+            ConsumedBytes = 0;
             Id++;
         }
     }

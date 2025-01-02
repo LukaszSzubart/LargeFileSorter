@@ -10,6 +10,7 @@ internal static class SourceChunkReader
     public async static Task<SourceChunk> Read(SourceChunkInfo chunkInfo)
     {
         await using var stream = OpenFile(chunkInfo);
+        stream.Position = chunkInfo.StartPos;
         var reader = PipeReader.Create(stream);
         var arrayPool = ArrayPool<Row>.Shared;
         var lineBuffer = arrayPool.Rent(GlobalSettings.ArrayPoolLengthLimit);
@@ -20,9 +21,10 @@ internal static class SourceChunkReader
         {
             result = await reader.ReadAsync();
 
+            var delimiterBytes = GlobalSettings.NewLineBytes.Span;
             var sequenceReader = new SequenceReader<byte>(result.Buffer);
 
-            while (sequenceReader.TryReadTo(out ReadOnlySpan<byte> bytes, (byte)ConstChars.LF, true))
+            while (index < chunkInfo.LineCount && sequenceReader.TryReadTo(out ReadOnlySpan<byte> bytes, delimiterBytes, true))
             {
                 var line = RowDeserializer.Deserialize(bytes);
                 lineBuffer[index] = line;

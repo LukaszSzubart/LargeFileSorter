@@ -1,2 +1,2 @@
 ﻿namespace Sorter.Common;
-internal record IntermediateChunkInfo (string FilePath, int RowCount, long SizeInBytes);
+internal record IntermediateChunkInfo (int Id, string FilePath, int RowCount, long SizeInBytes);

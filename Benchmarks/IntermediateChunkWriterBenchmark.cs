@@ -55,6 +55,6 @@ public class IntermediateChunkWriterBenchmark
     private IntermediateChunkInfo GetInfo(string name)
     {
         var path = Path.Combine(_rootPath, '_' + name + ".txt");
-        return new IntermediateChunkInfo(path, _rows.Length, 1);
+        return new IntermediateChunkInfo(1, path, _rows.Length, 1);
     }
 }

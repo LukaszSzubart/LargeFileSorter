@@ -24,8 +24,13 @@ internal static class Phase1Orchestrator
 
     private static async ValueTask ReadSortAndWriteToDisk(Phase1ChunkInfo chunkInfo, CancellationToken token)
     {
-        var chunk = await SourceChunkReader.Read(chunkInfo.Source);
-        Array.Sort(chunk.LineBuffer, 0, chunkInfo.Source.LineCount, Row.Comparer);
+        using var chunkData = await SourceChunkReader.Read(chunkInfo.Source);
+        Array.Sort(chunkData.LineBuffer, 0, chunkInfo.Source.LineCount, Row.Comparer);
+        await IntermidiateChunkStreamWriter.Write(chunkInfo.DestinationChunkInfo, chunkData.LineBuffer);
 
+        if (GlobalSettings.DumpIntermidieteChunkDefinition)
+        {
+            await IntermediateChunkInfoDumper.Dump("1", chunkInfo.DestinationChunkInfo);
+        }
     }
 }

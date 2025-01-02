@@ -7,7 +7,6 @@ internal static class IntermidiateChunkPipeWriter
 {
 
     private static ReadOnlyMemory<byte> NumberStringSeparatorBytes { get; } = GlobalSettings.Encoding.GetBytes(". ").AsMemory();
-    private static ReadOnlyMemory<byte> NewLineBytes { get; } = GlobalSettings.Encoding.GetBytes(GlobalSettings.NewLine).AsMemory();
 
     public static async Task Write(IntermediateChunkInfo chunkInfo, Row[] rows)
     {
@@ -55,7 +54,7 @@ internal static class IntermidiateChunkPipeWriter
         var stringBytesWrote = GlobalSettings.Encoding.GetBytes(row.String, stringDestSpan);
         writer.Advance(stringBytesWrote);
 
-        writer.Write(NewLineBytes.Span);
+        writer.Write(GlobalSettings.NewLineBytes.Span);
 
        return Flush(writer);
     }
