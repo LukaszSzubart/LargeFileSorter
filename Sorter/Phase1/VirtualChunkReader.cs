@@ -4,12 +4,12 @@ using System.IO.Pipelines;
 
 namespace Sorter.Phase1;
 
-internal static class SourceChunkReader
+internal static class VirtualChunkReader
 {
-    public async static Task<SourceChunk> Read(SourceChunkInfo chunkInfo)
+    public async static Task<ChunkData> Read(VirtualChunkInfo chunkInfo)
     {
         await using var stream = OpenFile(chunkInfo);
-        stream.Position = chunkInfo.StartPos;
+        stream.Position = chunkInfo.Offset;
         var reader = PipeReader.Create(stream);
         var arrayPool = ArrayPool<Row>.Shared;
         var lineBuffer = arrayPool.Rent(GlobalSettings.ArrayPoolLengthLimit);
@@ -23,7 +23,7 @@ internal static class SourceChunkReader
             var delimiterBytes = GlobalSettings.NewLineBytes.Span;
             var sequenceReader = new SequenceReader<byte>(result.Buffer);
 
-            while (index < chunkInfo.LineCount && sequenceReader.TryReadTo(out ReadOnlySpan<byte> bytes, delimiterBytes, true))
+            while (index < chunkInfo.RowCount && sequenceReader.TryReadTo(out ReadOnlySpan<byte> bytes, delimiterBytes, true))
             {
                 var line = RowDeserializer.Deserialize(bytes);
                 lineBuffer[index] = line;
@@ -32,13 +32,13 @@ internal static class SourceChunkReader
 
             reader.AdvanceTo(sequenceReader.Position, result.Buffer.End);
 
-        } while (index < chunkInfo.LineCount);
+        } while (index < chunkInfo.RowCount);
 
-        return new SourceChunk(chunkInfo, lineBuffer, arrayPool);
+        return new ChunkData(lineBuffer, arrayPool);
     }
 
 
-    private static FileStream OpenFile(SourceChunkInfo chunkInfo)
+    private static FileStream OpenFile(VirtualChunkInfo chunkInfo)
     {
         var fsOptions = new FileStreamOptions
         {

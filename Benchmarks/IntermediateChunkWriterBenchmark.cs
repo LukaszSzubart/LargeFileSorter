@@ -25,8 +25,10 @@ public class IntermediateChunkWriterBenchmark
     [GlobalSetup]
     public void Setup()
     {
-        using var sourceStream = File.OpenRead(TestDataPaths.RowsSmallJson);
-        _rows = JsonSerializer.Deserialize<Row[]>(sourceStream);
+        var path = TestDataPaths.RowsSmallJson;
+        using var sourceStream = File.OpenRead(path);
+        _rows = JsonSerializer.Deserialize<Row[]>(sourceStream) 
+            ?? throw new Exception($"Failed to load test data from: {path}");
     }
 
     [Benchmark]
@@ -42,14 +44,14 @@ public class IntermediateChunkWriterBenchmark
     }
 
     [Benchmark]
-    public async Task Stream()
+    public void Stream()
     {
-        await IntermidiateChunkStreamWriter.Write(GetInfo(nameof(Stream)), _rows);
+        PersistentChunkStreamWriter.Write(GetInfo(nameof(Stream)), _rows);
     }
 
-    private IntermediateChunkInfo GetInfo(string name)
+    private PersistentChunkInfo GetInfo(string name)
     {
         var path = Path.Combine(TestDataPaths.OutDir, '_' + name + ".txt");
-        return new IntermediateChunkInfo(1, path, _rows.Length, 1);
+        return new PersistentChunkInfo(1, path, _rows.Length, 1);
     }
 }

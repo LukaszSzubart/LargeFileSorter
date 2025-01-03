@@ -1,4 +1,6 @@
-﻿namespace Tools;
+﻿using Tools;
+
+namespace LessPerformantImplementations;
 
 public static class StreamLineCounter
 {

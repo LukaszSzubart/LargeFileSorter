@@ -51,9 +51,10 @@ internal static class Phase1ChunkInfoFactory
 
     private static Phase1ChunkInfo CreateInfo(RunInfo runInfo, ChunkContext ctx)
     {
-        var sourceInfo = new SourceChunkInfo(ctx.Id, runInfo.InputFilePath, ctx.StartPos, ctx.RowCount, ctx.ConsumedBytes);
+        var sourceInfo = new VirtualChunkInfo(ctx.Id, runInfo.InputFilePath, ctx.StartPos, ctx.RowCount, ctx.ConsumedBytes);
         var destPath = TempFilePathFactory.CreateChunkFilePath("1", ctx.Id);
-        var destInfo = new IntermediateChunkInfo(ctx.Id, destPath, ctx.RowCount, ctx.ConsumedBytes);
+        var destInfo = new PersistentChunkInfo(ctx.Id, destPath, ctx.RowCount, ctx.ConsumedBytes);
+
         return new(sourceInfo, destInfo);
     }
 

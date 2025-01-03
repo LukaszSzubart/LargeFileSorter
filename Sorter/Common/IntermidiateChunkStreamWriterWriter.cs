@@ -2,7 +2,7 @@
 
 internal class IntermidiateChunkStreamWriterWriter
 {
-    public static Task Write(IntermediateChunkInfo chunkInfo, Row[] rows)
+    public static Task Write(PersistentChunkInfo chunkInfo, Row[] rows)
     {
         using var stream = OpenWriteStream(chunkInfo);
         using var writer = new StreamWriter(stream, GlobalSettings.Encoding, 1024 * 1024);
@@ -17,7 +17,7 @@ internal class IntermidiateChunkStreamWriterWriter
         return Task.CompletedTask;
     }
 
-    private static FileStream OpenWriteStream(IntermediateChunkInfo chunkInfo)
+    private static FileStream OpenWriteStream(PersistentChunkInfo chunkInfo)
     {
         var options = new FileStreamOptions
         {

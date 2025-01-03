@@ -5,7 +5,7 @@ namespace Sorter;
 
 public static class GlobalSettings
 {
-    public static int ThreadLimit => 1;
+    public static int ThreadLimit => 7;
     public static long MemoryLimit => BinarySize.InBytes.GB;
 
     public static int ArrayPoolLengthLimit => 1024 * 1024;
@@ -22,9 +22,7 @@ public static class GlobalSettings
 
     public static CultureInfo CultureInfo => CultureInfo.InvariantCulture;
 
-    public static bool DumpIntermidieteChunkDefinition => true;
+    public static bool DumpIntermidieteChunkDefinition => false;
 
-    public static bool CleanWorkingDirBefore => false;
-
-    public static int IntermediateChunkReadChannelCapacity => ArrayPoolLengthLimit;
+    public static bool CleanWorkingDirBefore => true;
 }

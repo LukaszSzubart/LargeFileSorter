@@ -8,7 +8,7 @@ internal static class IntermidiateChunkPipeWriter
 
     private static ReadOnlyMemory<byte> NumberStringSeparatorBytes { get; } = GlobalSettings.Encoding.GetBytes(". ").AsMemory();
 
-    public static async Task Write(IntermediateChunkInfo chunkInfo, Row[] rows)
+    public static async Task Write(PersistentChunkInfo chunkInfo, Row[] rows)
     {
         await using var stream = OpenWrite(chunkInfo);
         var writer = CreatePipeWriter(stream);
@@ -19,7 +19,7 @@ internal static class IntermidiateChunkPipeWriter
         }
     }
 
-    private static FileStream OpenWrite(IntermediateChunkInfo chunkInfo) 
+    private static FileStream OpenWrite(PersistentChunkInfo chunkInfo) 
     {
         var options = new FileStreamOptions
         {

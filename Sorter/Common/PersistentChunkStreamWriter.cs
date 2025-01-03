@@ -1,12 +1,24 @@
 ﻿using System.Buffers;
+using System.IO;
 
 namespace Sorter.Common;
-internal class IntermidiateChunkStreamWriter
+internal class PersistentChunkStreamWriter : IDisposable
 {
+    private readonly FileStream _stream;
+
     private static ReadOnlyMemory<byte> NumberStringSeparatorBytes { get; } = GlobalSettings.Encoding.GetBytes(". ").AsMemory();
     private static ReadOnlyMemory<byte> NewLineBytes { get; } = GlobalSettings.Encoding.GetBytes(GlobalSettings.NewLine).AsMemory();
 
-    public static Task Write(IntermediateChunkInfo chunkInfo, IReadOnlyList<Row> rows)
+    private PersistentChunkStreamWriter(
+        FileStream outStream)
+    {
+        this._stream = outStream;
+    }
+
+    public static PersistentChunkStreamWriter Create(PersistentChunkInfo chunkInfo) 
+        => new (OpenWriteStream(chunkInfo));
+
+    public static void Write(PersistentChunkInfo chunkInfo, IReadOnlyList<Row> rows)
     {
         using var stream = OpenWriteStream(chunkInfo);
 
@@ -14,11 +26,14 @@ internal class IntermidiateChunkStreamWriter
         {
             WriteRow(stream, rows[i]);
         }
-
-        return Task.CompletedTask;
     }
 
-    private static FileStream OpenWriteStream(IntermediateChunkInfo chunkInfo)
+    public void Write(Row row)
+    {
+        WriteRow(_stream, row);
+    }
+
+    private static FileStream OpenWriteStream(PersistentChunkInfo chunkInfo)
     {
         var options = new FileStreamOptions
         {
@@ -56,9 +71,13 @@ internal class IntermidiateChunkStreamWriter
         memory?.Dispose();
     }
 
-
     private static int CalculateBufferSize(Row row)
         => 20 //ulong max value character count
         + 4 // space + dot + newLine (max 2 chars)
         + GlobalSettings.Encoding.GetByteCount(row.String);
+
+    public void Dispose()
+    {
+        _stream.Dispose();
+    }
 }

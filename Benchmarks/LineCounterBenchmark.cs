@@ -1,6 +1,8 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using Benchmarks.TestData;
+using LessPerformantImplementations;
+using Tools;
 namespace Benchmarks;
 
 
@@ -19,20 +21,20 @@ public class LineCounterBenchmark
     public long Stream()
     {
         using var stream = File.OpenRead(TestDataPaths.ChunkSmallSorted);
-        return Tools.StreamLineCounter.Count(stream);
+        return StreamLineCounter.Count(stream);
     }
 
     [Benchmark]
     public async Task<long> PipeWithTryAdvanceTo()
     {
         using var stream = File.OpenRead(TestDataPaths.ChunkSmallSorted);
-        return await Tools.PipeLineCounter.CountWithTryAdvanceTo(stream);
+        return await PipeLineCounter.CountWithTryAdvanceTo(stream);
     }
 
     [Benchmark]
     public async Task<long> PipeWithReadTo()
     {
         using var stream = File.OpenRead(TestDataPaths.ChunkSmallSorted);
-        return await Tools.PipeLineCounter.CountWithTryReadto(stream);
+        return await PipeLineCounter.CountWithTryReadto(stream);
     }
 }

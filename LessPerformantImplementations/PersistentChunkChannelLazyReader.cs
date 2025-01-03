@@ -1,42 +1,43 @@
-﻿using Sorter.Common;
+﻿using Sorter;
+using Sorter.Common;
 using System.Buffers;
 using System.Diagnostics;
 using System.IO.Pipelines;
 using System.Threading.Channels;
 
-namespace Sorter.Phase2;
-internal class Phase2ChannelChunkReader : IPhaseChunkReader
+namespace LessPerformantImplementations;
+internal class PersistentChunkChannelLazyReader : IAsyncEnumerator<Row>
 {
     private const int BufferSize = 256;
-    private readonly IntermediateChunkInfo _chunkInfo;
+    private readonly PersistentChunkInfo _chunkInfo;
     private readonly Channel<Row> _chunkChannel;
+    private bool _completed = false;
 
-    public Phase2ChannelChunkReader(IntermediateChunkInfo chunkInfo)
+    public PersistentChunkChannelLazyReader(PersistentChunkInfo chunkInfo)
     {
         _chunkInfo = chunkInfo;
-        _chunkChannel = Channel.CreateBounded<Row>(new BoundedChannelOptions(GlobalSettings.IntermediateChunkReadChannelCapacity)
+        _chunkChannel = Channel.CreateBounded<Row>(new BoundedChannelOptions(BufferSize)
         {
             SingleReader = true,
             SingleWriter = true,
             FullMode = BoundedChannelFullMode.Wait
         });
         _ = Task.Run(StartFileRead);
-        Row = Row.Empty;
+        Current = Row.Empty;
     }
 
-    public Row Row { get; private set; }
-    public bool Completed { get; private set; }
+    public Row Current { get; private set; }
 
-    public ValueTask<bool> Reload()
+    public ValueTask<bool> MoveNextAsync()
     {
-        if (Completed)
-            return ValueTask.FromResult(false);
-
         if (_chunkChannel.Reader.TryRead(out var row))
         {
-            Row = row;
-            return ValueTask.FromResult(false);
+            Current = row;
+            return ValueTask.FromResult(true);
         }
+
+        if (_completed)
+            return ValueTask.FromResult(false);
 
         return new ValueTask<bool>(ReloadAsync());
     }
@@ -47,14 +48,14 @@ internal class Phase2ChannelChunkReader : IPhaseChunkReader
         {
             if (_chunkChannel.Reader.TryRead(out var row))
             {
-                Row = row;
-                return false;
+                Current = row;
+                return true;
             }
             throw new Exception("something went wrong");
         }
-        Row = Row.Empty;
-        Completed = true;
-        return true;
+        Current = Row.Empty;
+        _completed = true;
+        return false;
     }
 
     private async Task StartFileRead()
@@ -112,7 +113,7 @@ internal class Phase2ChannelChunkReader : IPhaseChunkReader
             await _chunkChannel.Writer.WriteAsync(rowsBuffer[i]);
         }
     }
-    private static FileStream OpenFile(IntermediateChunkInfo chunkInfo)
+    private static FileStream OpenFile(PersistentChunkInfo chunkInfo)
     {
         var fsOptions = new FileStreamOptions
         {
@@ -123,5 +124,10 @@ internal class Phase2ChannelChunkReader : IPhaseChunkReader
         };
 
         return new FileStream(chunkInfo.FilePath, fsOptions);
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        return ValueTask.CompletedTask;
     }
 }

@@ -1,6 +1,7 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using Benchmarks.TestData;
+using LessPerformantImplementations;
 using Sorter;
 using Sorter.Common;
 using Sorter.Phase2;
@@ -14,33 +15,36 @@ namespace Benchmarks;
 
 [MemoryDiagnoser]
 [SimpleJob(RuntimeMoniker.Net90)]
-public class Phase2ChunkReaderBenchmark
+public class PersistentChunkLazyReaderBenchmark
 {
-    private IntermediateChunkInfo _chunkInfo = TestDataInfos.ChunkSmallSorted;
+    private PersistentChunkInfo _chunkInfo = TestDataInfos.ChunkSmallSorted;
 
 
     [Benchmark]
     public async Task<object> Simple()
     {
-        using var reader = new Phase2SimpleChunkReader(_chunkInfo);
+        await using var reader = new PersistentChunkBufferedLazyReader(_chunkInfo);
         return await PerformTest(reader);
     }
 
     [Benchmark]
     public async Task<object> Channel()
     {
-        var reader = new Phase2ChannelChunkReader(_chunkInfo);
+        await using var reader = new PersistentChunkChannelLazyReader(_chunkInfo);
         return await PerformTest(reader);
     }
 
-    private static async Task<object> PerformTest(IPhaseChunkReader reader)
+    private async Task<object> PerformTest(IAsyncEnumerator<Row> reader)
     {
         var rows = new List<Row>(GlobalSettings.ArrayPoolLengthLimit);
 
-        while (!reader.Completed)
+        while (await reader.MoveNextAsync())
+        { 
+            rows.Add(reader.Current);
+        }
+        if (_chunkInfo.RowCount != rows.Count) 
         {
-            await reader.Reload();
-            rows.Add(reader.Row);
+            throw new Exception($"Number of rows read from file ({rows.Count}) does not match expected count ({_chunkInfo.RowCount}).");
         }
         return rows;
     }

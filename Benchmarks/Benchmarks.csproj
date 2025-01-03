@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\LessPerformantImplementations\LessPerformantImplementations.csproj" />
     <ProjectReference Include="..\Sorter\Sorter.csproj" />
     <ProjectReference Include="..\TestFileGenerator\TestFileGenerator.csproj" />
     <ProjectReference Include="..\Tools\Tools.csproj" />

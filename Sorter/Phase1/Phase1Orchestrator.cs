@@ -3,12 +3,12 @@
 namespace Sorter.Phase1;
 internal static class Phase1Orchestrator
 {
-    public static async Task<IEnumerable<IntermediateChunkInfo>> ExecutePhase1(RunInfo runInfo)
+    public static async Task<PersistentChunkInfo[]> ExecutePhase1(RunInfo runInfo)
     {
         var chunkReadInfos = await Phase1ChunkInfoFactory.Create(runInfo);
         await ReadSortAndWriteToDiskInParallel(chunkReadInfos);
 
-        return chunkReadInfos.Select(c => c.DestinationChunkInfo);
+        return chunkReadInfos.Select(c => c.Destination).ToArray();
     }
 
 
@@ -24,13 +24,13 @@ internal static class Phase1Orchestrator
 
     private static async ValueTask ReadSortAndWriteToDisk(Phase1ChunkInfo chunkInfo, CancellationToken token)
     {
-        using var chunkData = await SourceChunkReader.Read(chunkInfo.Source);
-        Array.Sort(chunkData.LineBuffer, 0, chunkInfo.Source.LineCount, Row.Comparer);
-        await IntermidiateChunkStreamWriter.Write(chunkInfo.DestinationChunkInfo, chunkData.LineBuffer);
+        using var data = await VirtualChunkReader.Read(chunkInfo.Source);
+        Array.Sort(data.Rows, 0, chunkInfo.Source.RowCount, Row.Comparer);
+        PersistentChunkStreamWriter.Write(chunkInfo.Destination, data.Rows);
 
         if (GlobalSettings.DumpIntermidieteChunkDefinition)
         {
-            await IntermediateChunkInfoDumper.Dump("1", chunkInfo.DestinationChunkInfo);
+            await IntermediateChunkInfoDumper.Dump("1", chunkInfo.Destination);
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using BenchmarkDotNet.Running;
 using Benchmarks;
 
-var summary = BenchmarkRunner.Run<LineCounterBenchmark>();
+var summary = BenchmarkRunner.Run<PersistentChunkLazyReaderBenchmark>();
 
 //var rootDir = "C:\\data\\tmp\\benchmark\\source.txt";
 //var f = new Fixture();
